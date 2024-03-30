@@ -47,8 +47,9 @@ export default class App extends React.Component {
           children.slice(-1)[0].next = {id: 0};
         });
 
+      console.log(nodes);
+
       const roots = nodes.filter(n => (n.parent.id === 0 && n.prev === 0));
-      console.log(roots);
       roots[0].prev = {id: 0};
       while (roots.slice(-1)[0].next !== 0) {
         let cur = roots.slice(-1)[0];
