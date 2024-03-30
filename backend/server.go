@@ -134,7 +134,7 @@ func main() {
    
 	app := fiber.New()
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "http://localhost:3000",
+		AllowOrigins: "http://localhost:3000, http://dynalist-trial.ddnsfree.com, https://dynalist-trial.ddnsfree.com",
 		AllowHeaders: "Origin, Content-Type, Accept",
 	}))
    
