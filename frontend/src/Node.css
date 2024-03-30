@@ -1,0 +1,19 @@
+.children {
+  /* padding-left: 2em; */
+}
+
+.Node {
+  text-align: left;
+}
+
+input {
+  margin: 0;
+  padding: 0.3em 0;
+  border:0;
+  width: 100%;
+  font-size: 1em;
+}
+
+input:focus {
+  outline: none;
+}
