@@ -6,7 +6,8 @@ export default class Node extends React.Component {
   state = {
     typing: 0,
     node: {},
-    hide: false
+    hide: false,
+    selected: false
   }
 
   constructor(props) {
@@ -16,7 +17,8 @@ export default class Node extends React.Component {
     this.state = {
       typing: 0,
       node: props.node,
-      hide: false
+      hide: false,
+      selected: false
     };
 
     this.handleChange = this.handleChange.bind(this);
@@ -40,6 +42,8 @@ export default class Node extends React.Component {
     this.focusNext = this.focusNext.bind(this);
     this.focusLast = this.focusLast.bind(this);
     this.toggleHide = this.toggleHide.bind(this);
+    this.swap = this.swap.bind(this);
+    this.checkSwap = this.checkSwap.bind(this);
   }
 
   async saveNode(node) {
@@ -102,7 +106,7 @@ export default class Node extends React.Component {
     this.insert(this.state.node.children.length - 1, node);
   }
 
-  async insert(i, node) {
+  async insert(i, node, cb) {
     let tmp = this.state.node;
     if (i !== -1) {
       tmp.children[i].next = node;
@@ -125,15 +129,16 @@ export default class Node extends React.Component {
 
     this.setState({node: tmp}, () => this.ref[node.id].input.focus());
 
-    this.props.updateChild(this.state.node.id, tmp);
+    this.props.updateChild(this.state.node.id, tmp, cb);
   }
 
   async eraseId(id) {
     this.state.node.children.map((n, i) => ({...n, i})).filter(n => n.id === id).forEach(({i}) => this.erase(i));
   }
 
-  async erase(i) {
+  async erase(i, cb) {
     let tmp = this.state.node;
+    console.log(tmp);
     
     if (i !== tmp.children.length - 1 && i !== 0) {
       tmp.children[i - 1].next = tmp.children[i + 1];
@@ -151,7 +156,7 @@ export default class Node extends React.Component {
     if (i !== 0) await this.saveNode(tmp.children[i - 1]);
     if (i !== tmp.children.length) await this.saveNode(tmp.children[i]);
 
-    this.props.updateChild(this.state.node.id, tmp);
+    this.props.updateChild(this.state.node.id, tmp, cb);
     return tmp;
   }
 
@@ -208,7 +213,32 @@ export default class Node extends React.Component {
     }
   }
 
+  checkSwap() {
+    const active = this.state.node.children.map((a, i) => ({...a, i})).filter(c => this.ref[c.id].state.selected);
+    if (active.length !== 2) return;
+    this.swap(active[0].i, active[1].i);
+    active.forEach(c => this.ref[c.id].setState({selected: false}));
+  }
+
+  async swap(i, j) {
+    if (i > j) {
+      j = [i, i = j][0];
+    }
+    const oldI = this.state.node.children[i];
+    const oldJ = this.state.node.children[j];
+    this.erase(j, () => {
+      this.erase(i, () => {
+        this.insert(i - 1, oldJ, () => {
+          this.insert(j - 1, oldI);
+        })
+      });
+    });
+  }
+
   handleKey(event) {
+    if (event.key === "Click") {
+      console.log(event);
+    }
     if (event.key === "Tab") {
       event.preventDefault();
       if (event.shiftKey) {
@@ -244,9 +274,13 @@ export default class Node extends React.Component {
   }
 
   toggleHide(event) {
-    if (event.target.className !== "bullet" && event.target.className !== "bullet hidden") return;
+    if (!event.target.classList.contains("bullet")) return;
+
     event.stopPropagation();
-    this.setState({hide: !this.state.hide});
+
+    if (event.shiftKey) {
+      this.setState({selected: !this.state.selected}, () => this.props.checkSwap());
+    } else this.setState({hide: !this.state.hide});
   }
 
   componentWillReceiveProps(props) {
@@ -258,12 +292,15 @@ export default class Node extends React.Component {
     return (
       <div className="Node">
         {/* <p contentEditable="true" onKeyDown={this.handleKey} onInput={this.handleChange} ref={this.pRef}>{this.state.node.info}</p> */}
-        <div class="inputForm"> <span ref={(s) => this.span = s} class={this.state.hide ? "bullet hidden" : "bullet"} onClick={this.toggleHide}> &#8226;</span> <input ref={(i) => this.input = i}  type="text" value={this.state.node.info} onChange={this.handleChange} onKeyDown={this.handleKey}/></div>
+        <div class="inputForm"> 
+          <span ref={(s) => this.span = s} class={`bullet ${this.state.hide ? "hidden" : ""} ${this.state.selected ? "selected" : ""}`} onClick={this.toggleHide}> &#8226;</span> 
+          <input id={this.state.node.id} ref={(i) => this.input = i}  type="text" value={this.state.node.info} onChange={this.handleChange} onKeyDown={this.handleKey}/>
+        </div>
         <div className="children">
           <ul>
           {this.state.hide ? null : 
             this.state.node.children.map(node => 
-              <li onClick={this.toggleHide} id={node.id}><Node ref={(i) => this.ref[node.id] = i} node={node} insertId={this.insertId} updateChild={this.updateChild} indentId={this.indentId} insertBack={this.insertBack} unindentId={this.unindentId} eraseId={this.eraseId} focusPrev={this.focusPrev} focusNext={this.focusNext}/></li>)
+              <li onClick={this.toggleHide} id={node.id}><Node ref={(i) => this.ref[node.id] = i} node={node} insertId={this.insertId} updateChild={this.updateChild} indentId={this.indentId} insertBack={this.insertBack} unindentId={this.unindentId} eraseId={this.eraseId} focusPrev={this.focusPrev} focusNext={this.focusNext} swap={this.swap} checkSwap={this.checkSwap}/></li>)
           }
           </ul>
         </div>

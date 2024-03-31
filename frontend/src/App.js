@@ -22,6 +22,8 @@ export default class App extends React.Component {
     this.focusPrev = this.focusPrev.bind(this);
     this.focusNext = this.focusNext.bind(this);
     this.focusLast = this.focusLast.bind(this);
+    this.swap = this.swap.bind(this);
+    this.checkSwap = this.checkSwap.bind(this);
   }
 
   componentDidMount() {
@@ -87,10 +89,15 @@ export default class App extends React.Component {
     this.state.roots.map((n, i) => ({...n, i})).filter(n => n.id === id).forEach(({i}) => this.insert(i, node));
   }
   
-  async insert(i, node) {
+  async insert(i, node, cb) {
     let tmp = this.state.roots;
-    tmp[i].next = node;
-    node.prev = tmp[i];
+
+    if (i !== -1) {
+      tmp[i].next = node;
+      node.prev = tmp[i];
+    } else {
+      node.prev = {id: 0};
+    }
 
     if (i !== tmp.length - 1) {
       tmp[i + 1].prev = node;
@@ -100,12 +107,15 @@ export default class App extends React.Component {
     }
 
     tmp.splice(i + 1, 0, node);
-    await this.saveNode(tmp[i]);
+    if (i !== -1) await this.saveNode(tmp[i]);
     await this.saveNode(tmp[i + 1]);
     if (i !== tmp.length - 2) await this.saveNode(tmp[i + 2]);
 
 
-    this.setState({roots: tmp}, () => this.ref[node.id].input.focus());
+    this.setState({roots: tmp}, () => {
+      this.ref[node.id].input.focus(); 
+      if (typeof(cb) === "function") cb();
+    });
   }
   
   
@@ -113,7 +123,7 @@ export default class App extends React.Component {
     this.state.roots.map((n, i) => ({...n, i})).filter(n => n.id === id).forEach(({i}) => this.erase(i));
   }
 
-  async erase(i) {
+  async erase(i, cb) {
     let tmp = this.state.roots;
     
     if (i !== tmp.length - 1 && i !== 0) {
@@ -132,7 +142,7 @@ export default class App extends React.Component {
     if (i !== 0) await this.saveNode(tmp[i - 1]);
     if (i !== tmp.length) await this.saveNode(tmp[i]);
 
-    this.setState({roots: tmp});
+    this.setState({roots: tmp}, cb);
     return tmp;
   }
 
@@ -188,13 +198,37 @@ export default class App extends React.Component {
     }
   }
 
+  checkSwap() {
+    const active = this.state.roots.map((a, i) => ({...a, i})).filter(c => this.ref[c.id].state.selected);
+    if (active.length !== 2) return;
+    this.swap(active[0].i, active[1].i);
+    active.forEach(c => this.ref[c.id].setState({selected: false}));
+  }
+
+  async swap(i, j) {
+    if (i > j) {
+      j = [i, i = j][0];
+    }
+    const oldI = this.state.roots[i];
+    const oldJ = this.state.roots[j];
+    this.erase(j, () => {
+      this.erase(i, () => {
+        this.insert(i - 1, oldJ, () => {
+          console.log("TES");
+          this.insert(j - 1, oldI);
+        })
+      });
+    });
+  }
+
+
 
 
   render() {
     return (
       <div className="App">
         <ul>
-          {this.state.roots.map(n => <li><Node ref={(node) => this.ref[n.id] = node} node={n} updateChild={this.updateChild} insertId={this.insertId} indentId={this.indentId} eraseId={this.eraseId} focusPrev={this.focusPrev} focusNext={this.focusNext}/></li>)}
+          {this.state.roots.map(n => <li><Node ref={(node) => this.ref[n.id] = node} node={n} updateChild={this.updateChild} insertId={this.insertId} indentId={this.indentId} eraseId={this.eraseId} focusPrev={this.focusPrev} focusNext={this.focusNext} swap={this.swap} checkSwap={this.checkSwap}/></li>)}
         </ul>
       </div>
     );
