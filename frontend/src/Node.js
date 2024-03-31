@@ -34,6 +34,9 @@ export default class Node extends React.Component {
     this.unindent = this.unindent.bind(this);
     this.delete = this.delete.bind(this);
     this.eraseId = this.eraseId.bind(this);
+    this.focusPrev = this.focusPrev.bind(this);
+    this.focusNext = this.focusNext.bind(this);
+    this.focusLast = this.focusLast.bind(this);
   }
 
   async saveNode(node) {
@@ -176,6 +179,31 @@ export default class Node extends React.Component {
     await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/delete?id=${this.state.node.id}`);
   }
 
+  focusPrev(id) {
+    const tmp = this.state.node.children.map((n, i) => ({...n, i})).filter(n => n.id === id);
+    if (tmp.length !== 1) return;
+    if (tmp[0].i === 0) {
+      this.input.focus();
+    } else {
+      this.ref[this.state.node.children[tmp[0].i - 1].id].focusLast()
+    }
+  }
+
+  focusLast() {
+    if (this.state.node.children.length === 0) this.input.focus();
+    else this.ref[this.state.node.children.slice(-1)[0].id].focusLast();
+  }
+
+  focusNext(id) {
+    const tmp = this.state.node.children.map((n, i) => ({...n, i})).filter(n => n.id === id);
+    if (tmp.length !== 1) return;
+    if (tmp[0].i === this.state.node.children.length - 1) {
+      this.props.focusNext(this.state.node.id)
+    } else {
+      this.ref[this.state.node.children[tmp[0].i + 1].id].input.focus();
+    }
+  }
+
   handleKey(event) {
     if (event.key === "Tab") {
       event.preventDefault();
@@ -195,6 +223,19 @@ export default class Node extends React.Component {
         this.delete();
       }
     }
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      this.props.focusPrev(this.state.node.id);
+    }
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      if (this.state.node.children.length !== 0) {
+        this.ref[this.state.node.children[0].id].input.focus();
+        return;
+      }
+      this.props.focusNext(this.state.node.id);
+
+    }
   }
 
   componentWillReceiveProps(props) {
@@ -211,7 +252,7 @@ export default class Node extends React.Component {
           <ul>
           {
             this.state.node.children.map(node => 
-              <li><Node ref={(i) => this.ref[node.id] = i} node={node} insertId={this.insertId} updateChild={this.updateChild} indentId={this.indentId} insertBack={this.insertBack} unindentId={this.unindentId} eraseId={this.eraseId} /></li>)
+              <li><Node ref={(i) => this.ref[node.id] = i} node={node} insertId={this.insertId} updateChild={this.updateChild} indentId={this.indentId} insertBack={this.insertBack} unindentId={this.unindentId} eraseId={this.eraseId} focusPrev={this.focusPrev} focusNext={this.focusNext}/></li>)
           }
           </ul>
         </div>

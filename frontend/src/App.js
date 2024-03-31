@@ -19,6 +19,9 @@ export default class App extends React.Component {
     this.indentId = this.indentId.bind(this);
     this.erase = this.erase.bind(this);
     this.eraseId = this.eraseId.bind(this);
+    this.focusPrev = this.focusPrev.bind(this);
+    this.focusNext = this.focusNext.bind(this);
+    this.focusLast = this.focusLast.bind(this);
   }
 
   componentDidMount() {
@@ -49,7 +52,6 @@ export default class App extends React.Component {
           children.slice(-1)[0].next = {id: 0};
         });
 
-      console.log(nodes);
 
       const roots = nodes.filter(n => (n.parent.id === 0 && n.prev === 0));
       roots[0].prev = {id: 0};
@@ -61,7 +63,6 @@ export default class App extends React.Component {
         roots.slice(-1)[0].prev = cur;
       }
       roots.slice(-1)[0].next = {id: 0};
-      console.log(roots);
       this.setState({roots});
     })
   }
@@ -162,12 +163,38 @@ export default class App extends React.Component {
     this.ref[tmp[i - 1].id].insertBack(node);
   }
 
+  focusPrev(id) {
+    const tmp = this.state.roots.map((n, i) => ({...n, i})).filter(n => n.id === id);
+    if (tmp.length !== 1) return;
+    if (tmp[0].i === 0) {
+      return;
+    } else {
+      this.ref[this.state.roots[tmp[0].i - 1].id].focusLast()
+    }
+  }
+
+  focusLast() {
+    if (this.state.roots.length === 0) this.input.focus();
+    else this.ref[this.state.roots.slice(-1)[0].id].focusLast();
+  }
+
+  focusNext(id) {
+    const tmp = this.state.roots.map((n, i) => ({...n, i})).filter(n => n.id === id);
+    if (tmp.length !== 1) return;
+    if (tmp[0].i === this.state.roots.length - 1) {
+      return;
+    } else {
+      this.ref[this.state.roots[tmp[0].i + 1].id].input.focus();
+    }
+  }
+
+
 
   render() {
     return (
       <div className="App">
         <ul>
-          {this.state.roots.map(n => <li><Node ref={(node) => this.ref[n.id] = node} node={n} updateChild={this.updateChild} insertId={this.insertId} indentId={this.indentId} eraseId={this.eraseId}/></li>)}
+          {this.state.roots.map(n => <li><Node ref={(node) => this.ref[n.id] = node} node={n} updateChild={this.updateChild} insertId={this.insertId} indentId={this.indentId} eraseId={this.eraseId} focusPrev={this.focusPrev} focusNext={this.focusNext}/></li>)}
         </ul>
       </div>
     );
