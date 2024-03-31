@@ -6,6 +6,7 @@ export default class Node extends React.Component {
   state = {
     typing: 0,
     node: {},
+    hide: false
   }
 
   constructor(props) {
@@ -14,7 +15,8 @@ export default class Node extends React.Component {
 
     this.state = {
       typing: 0,
-      node: props.node
+      node: props.node,
+      hide: false
     };
 
     this.handleChange = this.handleChange.bind(this);
@@ -37,6 +39,7 @@ export default class Node extends React.Component {
     this.focusPrev = this.focusPrev.bind(this);
     this.focusNext = this.focusNext.bind(this);
     this.focusLast = this.focusLast.bind(this);
+    this.toggleHide = this.toggleHide.bind(this);
   }
 
   async saveNode(node) {
@@ -240,6 +243,12 @@ export default class Node extends React.Component {
     }
   }
 
+  toggleHide(event) {
+    if (event.target.className !== "bullet" && event.target.className !== "bullet hidden") return;
+    event.stopPropagation();
+    this.setState({hide: !this.state.hide});
+  }
+
   componentWillReceiveProps(props) {
     const {node} = props;
     this.setState({node});
@@ -249,12 +258,12 @@ export default class Node extends React.Component {
     return (
       <div className="Node">
         {/* <p contentEditable="true" onKeyDown={this.handleKey} onInput={this.handleChange} ref={this.pRef}>{this.state.node.info}</p> */}
-        <input ref={(i) => this.input = i} type="text" value={this.state.node.info} onChange={this.handleChange} onKeyDown={this.handleKey}/>
+        <div class="inputForm"> <span ref={(s) => this.span = s} class={this.state.hide ? "bullet hidden" : "bullet"} onClick={this.toggleHide}> &#8226;</span> <input ref={(i) => this.input = i}  type="text" value={this.state.node.info} onChange={this.handleChange} onKeyDown={this.handleKey}/></div>
         <div className="children">
           <ul>
-          {
+          {this.state.hide ? null : 
             this.state.node.children.map(node => 
-              <li><Node ref={(i) => this.ref[node.id] = i} node={node} insertId={this.insertId} updateChild={this.updateChild} indentId={this.indentId} insertBack={this.insertBack} unindentId={this.unindentId} eraseId={this.eraseId} focusPrev={this.focusPrev} focusNext={this.focusNext}/></li>)
+              <li onClick={this.toggleHide} id={node.id}><Node ref={(i) => this.ref[node.id] = i} node={node} insertId={this.insertId} updateChild={this.updateChild} indentId={this.indentId} insertBack={this.insertBack} unindentId={this.unindentId} eraseId={this.eraseId} focusPrev={this.focusPrev} focusNext={this.focusNext}/></li>)
           }
           </ul>
         </div>

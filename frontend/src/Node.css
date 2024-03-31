@@ -2,18 +2,67 @@
   /* padding-left: 2em; */
 }
 
-.Node {
+.inputForm {
   text-align: left;
+  vertical-align: middle;
+  display: flex;
+  align-items: center;
 }
 
 input {
   margin: 0;
-  padding: 0.3em 0;
   border:0;
   width: 100%;
   font-size: 1em;
+  position: relative;
+  padding-left: 0em;
+  flex: 1;
 }
 
 input:focus {
   outline: none;
+}
+
+span.bullet {
+  flex-shrink: 0;
+  font-size: 1.5em;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  margin-top: -0.1em;
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none; /* Safari */
+  -khtml-user-select: none; /* Konqueror HTML */
+  -moz-user-select: none; /* Old versions of Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none; /* Non-prefixed version, currently */
+  padding: 0 0.5em
+}
+
+/* li.hidden::marker {
+  width: 100px;
+  color: red
+}
+
+li:hover::marker { 
+  cursor: pointer; 
+} */
+
+ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+li {
+  margin: 0.5em 0;
+  position: relative;
+  padding-left: 2em
+}
+
+span.bullet:hover {
+  cursor: pointer;
+}
+
+.hidden {
+  color: red;
 }
