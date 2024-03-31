@@ -122,6 +122,28 @@ func getHandler(c *fiber.Ctx, db *sql.DB) error {
 	return c.JSON(node)
 }
 
+func deleteHelper(id string, db *sql.DB) {
+	rows, err:= db.Query("SELECT * FROM " + DB + " WHERE parent=" + id)
+	defer rows.Close()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	for rows.Next() {
+		tmp := parseRow(rows)
+		deleteHelper(fmt.Sprintf("%v", tmp.Id), db)
+	}
+
+	db.Exec("DELETE FROM " + DB + " WHERE id=" + id)
+}
+
+func deleteHandler(c *fiber.Ctx, db *sql.DB) error {
+	id := c.Query("id")
+	
+	deleteHelper(id, db);
+	return c.SendStatus(200);
+}
+
 
 func main() {
 	uri := getEnv("POSTGRES_URL")
@@ -152,6 +174,11 @@ func main() {
 
 	app.Get("/node", func(c *fiber.Ctx) error {
 		return getHandler(c, db)
+	})
+
+
+	app.Delete("/delete", func (c *fiber.Ctx) error {
+		return deleteHandler(c, db)
 	})
 
   	 

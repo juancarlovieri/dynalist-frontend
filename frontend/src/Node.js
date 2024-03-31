@@ -32,6 +32,8 @@ export default class Node extends React.Component {
     this.erase = this.erase.bind(this);
     this.unindentId = this.unindentId.bind(this);
     this.unindent = this.unindent.bind(this);
+    this.delete = this.delete.bind(this);
+    this.eraseId = this.eraseId.bind(this);
   }
 
   async saveNode(node) {
@@ -120,6 +122,10 @@ export default class Node extends React.Component {
     this.props.updateChild(this.state.node.id, tmp);
   }
 
+  async eraseId(id) {
+    this.state.node.children.map((n, i) => ({...n, i})).filter(n => n.id === id).forEach(({i}) => this.erase(i));
+  }
+
   async erase(i) {
     let tmp = this.state.node;
     
@@ -165,6 +171,11 @@ export default class Node extends React.Component {
     this.props.insertId(this.state.node.id, node);
   }
 
+  async delete() {
+    this.props.eraseId(this.state.node.id, this.state.node);
+    await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/delete?id=${this.state.node.id}`);
+  }
+
   handleKey(event) {
     if (event.key === "Tab") {
       event.preventDefault();
@@ -178,6 +189,11 @@ export default class Node extends React.Component {
     if (event.key === "Enter") {
       event.preventDefault();
       this.createBelow();
+    }
+    if (event.key === "Backspace") {
+      if (event.target.value === "") {
+        this.delete();
+      }
     }
   }
 
@@ -195,7 +211,7 @@ export default class Node extends React.Component {
           <ul>
           {
             this.state.node.children.map(node => 
-              <li><Node ref={(i) => this.ref[node.id] = i} node={node} insertId={this.insertId} updateChild={this.updateChild} indentId={this.indentId} insertBack={this.insertBack} unindentId={this.unindentId} /></li>)
+              <li><Node ref={(i) => this.ref[node.id] = i} node={node} insertId={this.insertId} updateChild={this.updateChild} indentId={this.indentId} insertBack={this.insertBack} unindentId={this.unindentId} eraseId={this.eraseId} /></li>)
           }
           </ul>
         </div>

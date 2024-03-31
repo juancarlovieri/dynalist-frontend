@@ -17,6 +17,8 @@ export default class App extends React.Component {
     this.insertId = this.insertId.bind(this);
     this.indent = this.indent.bind(this);
     this.indentId = this.indentId.bind(this);
+    this.erase = this.erase.bind(this);
+    this.eraseId = this.eraseId.bind(this);
   }
 
   componentDidMount() {
@@ -105,8 +107,36 @@ export default class App extends React.Component {
     this.setState({roots: tmp}, () => this.ref[node.id].input.focus());
   }
   
+  
+  async eraseId(id) {
+    this.state.roots.map((n, i) => ({...n, i})).filter(n => n.id === id).forEach(({i}) => this.erase(i));
+  }
+
+  async erase(i) {
+    let tmp = this.state.roots;
+    
+    if (i !== tmp.length - 1 && i !== 0) {
+      tmp[i - 1].next = tmp[i + 1];
+      tmp[i + 1].prev = tmp[i - 1];
+    } else if (i !== 0) {
+      tmp[i - 1].next = {id: 0};
+    } else if (i !== tmp.length - 1) {
+      tmp[i + 1].prev = {id: 0};
+    } else {
+
+    }
+
+    tmp = tmp.filter(n => n.id !== tmp[i].id);
+
+    if (i !== 0) await this.saveNode(tmp[i - 1]);
+    if (i !== tmp.length) await this.saveNode(tmp[i]);
+
+    this.setState({roots: tmp});
+    return tmp;
+  }
+
+
   async indentId(id, node) {
-    console.log(this.state);
     this.state.roots.map((n, i) => ({...n, i})).filter(n => n.id === id).forEach(({i}) => this.indent(i, node));
   }
 
@@ -132,11 +162,12 @@ export default class App extends React.Component {
     this.ref[tmp[i - 1].id].insertBack(node);
   }
 
+
   render() {
     return (
       <div className="App">
         <ul>
-          {this.state.roots.map(n => <li><Node ref={(node) => this.ref[n.id] = node} node={n} updateChild={this.updateChild} insertId={this.insertId} indentId={this.indentId}/></li>)}
+          {this.state.roots.map(n => <li><Node ref={(node) => this.ref[n.id] = node} node={n} updateChild={this.updateChild} insertId={this.insertId} indentId={this.indentId} eraseId={this.eraseId}/></li>)}
         </ul>
       </div>
     );
