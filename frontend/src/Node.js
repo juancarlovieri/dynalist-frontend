@@ -175,6 +175,7 @@ export default class Node extends React.Component {
   }
 
   async delete() {
+    this.props.focusPrev(this.state.node.id);
     this.props.eraseId(this.state.node.id, this.state.node);
     await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/delete?id=${this.state.node.id}`);
   }
@@ -220,6 +221,7 @@ export default class Node extends React.Component {
     }
     if (event.key === "Backspace") {
       if (event.target.value === "") {
+        event.preventDefault();
         this.delete();
       }
     }
