@@ -25,11 +25,11 @@ input:focus {
 
 span.bullet {
   flex-shrink: 0;
-  font-size: 1.5em;
+  font-size: 2em;
   display: inline-flex;
   align-items: center;
   vertical-align: middle;
-  margin-top: -0.1em;
+  margin-top: -0.25em;
   -webkit-touch-callout: none; /* iOS Safari */
   -webkit-user-select: none; /* Safari */
   -khtml-user-select: none; /* Konqueror HTML */
