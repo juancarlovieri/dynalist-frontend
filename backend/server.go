@@ -125,7 +125,6 @@ func getHandler(c *fiber.Ctx, db *sql.DB) error {
 
 func main() {
 	uri := getEnv("POSTGRES_URL")
-	fmt.Println(uri)
 	db, err := sql.Open("postgres", uri)
 
 	if err != nil {

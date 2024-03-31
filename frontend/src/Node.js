@@ -29,6 +29,9 @@ export default class Node extends React.Component {
     this.insertBack = this.insertBack.bind(this);
     this.indentId = this.indentId.bind(this);
     this.indent = this.indent.bind(this);
+    this.erase = this.erase.bind(this);
+    this.unindentId = this.unindentId.bind(this);
+    this.unindent = this.unindent.bind(this);
   }
 
   async saveNode(node) {
@@ -117,6 +120,29 @@ export default class Node extends React.Component {
     this.props.updateChild(this.state.node.id, tmp);
   }
 
+  async erase(i) {
+    let tmp = this.state.node;
+    
+    if (i !== tmp.children.length - 1 && i !== 0) {
+      tmp.children[i - 1].next = tmp.children[i + 1];
+      tmp.children[i + 1].prev = tmp.children[i - 1];
+    } else if (i !== 0) {
+      tmp.children[i - 1].next = {id: 0};
+    } else if (i !== tmp.children.length - 1) {
+      tmp.children[i + 1].prev = {id: 0};
+    } else {
+
+    }
+
+    tmp.children = tmp.children.filter(n => n.id !== tmp.children[i].id);
+
+    if (i !== 0) await this.saveNode(tmp.children[i - 1]);
+    if (i !== tmp.children.length) await this.saveNode(tmp.children[i]);
+
+    this.props.updateChild(this.state.node.id, tmp);
+    return tmp;
+  }
+
 
   async indentId(id, node) {
     this.state.node.children.map((n, i) => ({...n, i})).filter(n => n.id === id).forEach(({i}) => this.indent(i, node));
@@ -124,29 +150,29 @@ export default class Node extends React.Component {
 
   async indent(i, node) {
     if (i === 0) return;
-    let tmp = this.state.node;
-    
-    if (i !== tmp.children.length - 1) {
-      tmp.children[i - 1].next = tmp.children[i + 1];
-      tmp.children[i + 1].prev = tmp.children[i - 1];
-    } else {
-      tmp.children[i - 1].next = {id: 0};
-    }
-
-    tmp.children = tmp.children.filter(n => n.id !== node.id);
-
-    await this.saveNode(tmp.children[i - 1]);
-    if (i !== tmp.children.length) await this.saveNode(tmp.children[i]);
-
-    this.props.updateChild(this.state.node.id, tmp);
-
+    const tmp = await this.erase(i);
     node.parent = tmp.children[i - 1];
     this.ref[tmp.children[i - 1].id].insertBack(node);
+  }
+
+  async unindentId(id, node) {
+    this.state.node.children.map((n, i) => ({...n, i})).filter(n => n.id === id).forEach(({i}) => this.unindent(i, node));
+  }
+
+  async unindent(i, node) {
+    await this.erase(i);
+    node.parent = this.state.node.parent;
+    this.props.insertId(this.state.node.id, node);
   }
 
   handleKey(event) {
     if (event.key === "Tab") {
       event.preventDefault();
+      if (event.shiftKey) {
+        if (this.state.node.parent.id === 0) return;
+        this.props.unindentId(this.state.node.id, this.state.node);
+        return;
+      }
       this.props.indentId(this.state.node.id, this.state.node);
     }
     if (event.key === "Enter") {
@@ -169,7 +195,7 @@ export default class Node extends React.Component {
           <ul>
           {
             this.state.node.children.map(node => 
-              <li><Node ref={(i) => this.ref[node.id] = i} node={node} insertId={this.insertId} updateChild={this.updateChild} indentId={this.indentId} insertBack={this.insertBack} /></li>)
+              <li><Node ref={(i) => this.ref[node.id] = i} node={node} insertId={this.insertId} updateChild={this.updateChild} indentId={this.indentId} insertBack={this.insertBack} unindentId={this.unindentId} /></li>)
           }
           </ul>
         </div>
