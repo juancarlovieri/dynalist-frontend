@@ -106,6 +106,29 @@ func updateHandler(c *fiber.Ctx, db *sql.DB) error {
 	return c.JSON(ret)
 }
 
+func updateInfoHandler(c *fiber.Ctx, db *sql.DB) error {
+	id:= c.Query("id")
+	newNode:= Node {}
+	{
+		err:= c.BodyParser(&newNode)
+		if err != nil {
+			log.Printf("An error occured: %v", err)
+			return c.SendString(err.Error())
+		}
+	}
+
+	rows, err := db.Query("UPDATE " + DB + " SET info=$1 WHERE id=$2 RETURNING *", newNode.Info, id)
+	if err != nil {
+		log.Fatalf("An error occured while executing query: %v", err)
+	}
+	defer rows.Close()
+	rows.Next()
+
+	ret := parseRow(rows)
+
+	return c.JSON(ret)
+}
+
 func getHandler(c *fiber.Ctx, db *sql.DB) error {
 	id := c.Query("id")
 	
@@ -170,6 +193,10 @@ func main() {
 
 	app.Put("/update", func(c *fiber.Ctx) error {
 		return updateHandler(c, db)
+	})
+
+	app.Put("/update/info", func(c *fiber.Ctx) error {
+		return updateInfoHandler(c, db)
 	})
 
 	app.Get("/node", func(c *fiber.Ctx) error {

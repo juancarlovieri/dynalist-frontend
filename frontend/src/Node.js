@@ -7,7 +7,8 @@ export default class Node extends React.Component {
     typing: 0,
     node: {},
     hide: false,
-    selected: false
+    selected: false,
+    lock: false
   }
 
   constructor(props) {
@@ -18,11 +19,11 @@ export default class Node extends React.Component {
       typing: 0,
       node: props.node,
       hide: false,
-      selected: false
+      selected: false,
+      lock: false
     };
 
     this.handleChange = this.handleChange.bind(this);
-    this.save = this.save.bind(this);
     this.saveText = this.saveText.bind(this);
     this.createBelow = this.createBelow.bind(this);
     this.insertId = this.insertId.bind(this);
@@ -46,9 +47,9 @@ export default class Node extends React.Component {
     this.checkSwap = this.checkSwap.bind(this);
   }
 
-  async saveNode(node) {
+  async saveNode(node, text) {
     const converted = {
-      info: node.info,
+      info: text,
       parent: node.parent.id,
       prev: node.prev.id,
       next: node.next.id
@@ -56,21 +57,18 @@ export default class Node extends React.Component {
     await axios.put(`${process.env.REACT_APP_BACKEND_URL}/update?id=${node.id}`, converted)
   }
 
-  async saveWithoutInfo(node) {
-    const {info} = (await axios.get(`${process.env.REACT_APP_BACKEND_URL}/node?id=${node.id}`)).data;
-    await this.saveNode({...node, info});
-    return info;
-  }
-
-  save() {
-    this.saveNode(this.state.node);
+  async saveInfo(node, text) {
+    const converted = {
+      info: text
+    };
+    await axios.put(`${process.env.REACT_APP_BACKEND_URL}/update/info?id=${node.id}`, converted)
   }
 
   async saveText(text) {
+    if (this.state.node.id === 0) return;
+
     const newNode = {...this.state.node, info: text};
-    await this.saveNode(newNode);
-    this.props.updateChild(this.state.node.id, newNode)
-    // this.setState({node: {...this.state.node, info: text}}, this.save);
+    this.setState({node: newNode}, () => this.saveInfo(newNode, text));
   }
 
   updateChild(id, child, cb) {
@@ -92,6 +90,7 @@ export default class Node extends React.Component {
   }
 
   async createBelow() {
+    if (this.state.node.id === 0) return;
     const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/create`, {info: "", parent: this.state.node.parent.id, prev: 0, next: 0});
     const newNode = {...res.data, children: [], parent: this.state.node.parent};
 
@@ -107,6 +106,12 @@ export default class Node extends React.Component {
   }
 
   async insert(i, node, cb) {
+    if (this.state.lock) {
+      setTimeout(() => this.insert(i, node, cb), 50);
+      return;
+    } else {
+      this.setState({lock: true});
+    }
     let tmp = this.state.node;
     if (i !== -1) {
       tmp.children[i].next = node;
@@ -123,13 +128,14 @@ export default class Node extends React.Component {
     }
 
     tmp.children.splice(i + 1, 0, node);
-    if (i !== -1) await this.saveNode(tmp.children[i]);
-    await this.saveNode(tmp.children[i + 1]);
-    if (i !== tmp.children.length - 2) await this.saveNode(tmp.children[i + 2]);
+    if (i !== -1) await this.saveNode(tmp.children[i], this.ref[tmp.children[i].id].state.node.info);
+    await this.saveNode(tmp.children[i + 1], node.info);
+    if (i !== tmp.children.length - 2) await this.saveNode(tmp.children[i + 2], this.ref[tmp.children[i + 2].id].state.node.info);
 
-    this.setState({node: tmp}, () => this.ref[node.id].input.focus());
-
-    this.props.updateChild(this.state.node.id, tmp, cb);
+    this.setState({node: tmp, lock: false}, () => {
+      this.ref[node.id].input.focus()
+      if (typeof(cb) === "function") cb();
+    });
   }
 
   async eraseId(id) {
@@ -137,8 +143,13 @@ export default class Node extends React.Component {
   }
 
   async erase(i, cb) {
+    if (this.state.lock) {
+      setTimeout(() => this.erase(i, cb), 50);
+      return;
+    } else {
+      this.setState({lock: true});
+    }
     let tmp = this.state.node;
-    console.log(tmp);
     
     if (i !== tmp.children.length - 1 && i !== 0) {
       tmp.children[i - 1].next = tmp.children[i + 1];
@@ -153,10 +164,10 @@ export default class Node extends React.Component {
 
     tmp.children = tmp.children.filter(n => n.id !== tmp.children[i].id);
 
-    if (i !== 0) await this.saveNode(tmp.children[i - 1]);
-    if (i !== tmp.children.length) await this.saveNode(tmp.children[i]);
+    if (i !== 0) await this.saveNode(tmp.children[i - 1], this.ref[tmp.children[i - 1].id].state.node.info);
+    if (i !== tmp.children.length) await this.saveNode(tmp.children[i], this.ref[tmp.children[i].id].state.node.info);
 
-    this.props.updateChild(this.state.node.id, tmp, cb);
+    this.setState({node: tmp, lock: false}, cb);
     return tmp;
   }
 
@@ -166,6 +177,10 @@ export default class Node extends React.Component {
   }
 
   async indent(i, node) {
+    if (this.state.lock) {
+      setTimeout(() => this.indent(i, node), 50);
+      return;
+    }
     if (i === 0) return;
     const tmp = await this.erase(i);
     node.parent = tmp.children[i - 1];
@@ -173,16 +188,23 @@ export default class Node extends React.Component {
   }
 
   async unindentId(id, node) {
+    if (this.state.node.id === 0) return;
     this.state.node.children.map((n, i) => ({...n, i})).filter(n => n.id === id).forEach(({i}) => this.unindent(i, node));
   }
 
   async unindent(i, node) {
+    if (this.state.lock) {
+      setTimeout(() => this.unindent(i, node), 50);
+      return;
+    }
+    if (this.state.node.id === 0) return;
     await this.erase(i);
     node.parent = this.state.node.parent;
     this.props.insertId(this.state.node.id, node);
   }
 
   async delete() {
+    if (this.state.node.id === 0) return;
     this.props.focusPrev(this.state.node.id);
     this.props.eraseId(this.state.node.id, this.state.node);
     await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/delete?id=${this.state.node.id}`);
@@ -192,7 +214,8 @@ export default class Node extends React.Component {
     const tmp = this.state.node.children.map((n, i) => ({...n, i})).filter(n => n.id === id);
     if (tmp.length !== 1) return;
     if (tmp[0].i === 0) {
-      this.input.focus();
+      if (this.state.node.id !== 0) this.input.focus();
+      else return;
     } else {
       this.ref[this.state.node.children[tmp[0].i - 1].id].focusLast()
     }
@@ -207,7 +230,8 @@ export default class Node extends React.Component {
     const tmp = this.state.node.children.map((n, i) => ({...n, i})).filter(n => n.id === id);
     if (tmp.length !== 1) return;
     if (tmp[0].i === this.state.node.children.length - 1) {
-      this.props.focusNext(this.state.node.id)
+      if (this.state.node.id !== 0) this.props.focusNext(this.state.node.id);
+      else return;
     } else {
       this.ref[this.state.node.children[tmp[0].i + 1].id].input.focus();
     }
@@ -236,9 +260,7 @@ export default class Node extends React.Component {
   }
 
   handleKey(event) {
-    if (event.key === "Click") {
-      console.log(event);
-    }
+    if (this.state.node.id === 0) return;
     if (event.key === "Tab") {
       event.preventDefault();
       if (event.shiftKey) {
@@ -275,6 +297,7 @@ export default class Node extends React.Component {
 
   toggleHide(event) {
     if (!event.target.classList.contains("bullet")) return;
+    if (this.state.node.id === 0) return;
 
     event.stopPropagation();
 
@@ -285,17 +308,21 @@ export default class Node extends React.Component {
 
   componentWillReceiveProps(props) {
     const {node} = props;
-    this.setState({node: {...node, info: this.state.node.info}});
+    this.setState({node: {...node, info: this.state.node.info, children: this.state.node.children}});
   }
 
   render() {
     return (
       <div className="Node">
         {/* <p contentEditable="true" onKeyDown={this.handleKey} onInput={this.handleChange} ref={this.pRef}>{this.state.node.info}</p> */}
-        <div class="inputForm"> 
-          <span ref={(s) => this.span = s} class={`bullet ${this.state.hide ? "hidden" : ""} ${this.state.selected ? "selected" : ""}`} onClick={this.toggleHide}> &#8226;</span> 
-          <input id={this.state.node.id} ref={(i) => this.input = i}  type="text" value={this.state.node.info} onChange={this.handleChange} onKeyDown={this.handleKey}/>
-        </div>
+        {
+          this.state.node.id !== 0 ? 
+            <div class="inputForm"> 
+              <span ref={(s) => this.span = s} class={`bullet ${this.state.hide ? "hidden" : ""} ${this.state.selected ? "selected" : ""}`} onClick={this.toggleHide}> &#8226;</span> 
+              <input id={this.state.node.id} ref={(i) => this.input = i}  type="text" value={this.state.node.info} onChange={this.handleChange} onKeyDown={this.handleKey}/>
+            </div> 
+          : null
+        }
         <div className="children">
           <ul>
           {this.state.hide ? null : 
