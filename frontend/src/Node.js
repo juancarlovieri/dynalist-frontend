@@ -76,7 +76,7 @@ export default class Node extends React.Component {
   updateChild(id, child, cb) {
     const node = this.state.node;
     this.state.node.children.map((n, i) => ({...n, i})).filter(n => n.id === id).forEach(({i}) => node.children[i] = child);
-    this.props.updateChild(node.id, node, cb);
+    this.setState({node}, cb);
   }
 
   async handleChange(event) {
@@ -87,7 +87,7 @@ export default class Node extends React.Component {
     this.setState({
       typing: setTimeout(() => {
         this.saveText(event.target.value);
-      }, 200)
+      }, 500)
     })
   }
 
@@ -202,7 +202,7 @@ export default class Node extends React.Component {
     if (this.state.node.children.length === 0) this.input.focus();
     else this.ref[this.state.node.children.slice(-1)[0].id].focusLast();
   }
-
+ 
   focusNext(id) {
     const tmp = this.state.node.children.map((n, i) => ({...n, i})).filter(n => n.id === id);
     if (tmp.length !== 1) return;
@@ -285,7 +285,7 @@ export default class Node extends React.Component {
 
   componentWillReceiveProps(props) {
     const {node} = props;
-    this.setState({node});
+    this.setState({node: {...node, info: this.state.node.info}});
   }
 
   render() {
@@ -300,7 +300,7 @@ export default class Node extends React.Component {
           <ul>
           {this.state.hide ? null : 
             this.state.node.children.map(node => 
-              <li onClick={this.toggleHide} id={node.id}><Node ref={(i) => this.ref[node.id] = i} node={node} insertId={this.insertId} updateChild={this.updateChild} indentId={this.indentId} insertBack={this.insertBack} unindentId={this.unindentId} eraseId={this.eraseId} focusPrev={this.focusPrev} focusNext={this.focusNext} swap={this.swap} checkSwap={this.checkSwap}/></li>)
+              <li onClick={this.toggleHide} id={node.id}><Node key={node.id} ref={(i) => this.ref[node.id] = i} node={node} insertId={this.insertId} updateChild={this.updateChild} indentId={this.indentId} insertBack={this.insertBack} unindentId={this.unindentId} eraseId={this.eraseId} focusPrev={this.focusPrev} focusNext={this.focusNext} swap={this.swap} checkSwap={this.checkSwap}/></li>)
           }
           </ul>
         </div>

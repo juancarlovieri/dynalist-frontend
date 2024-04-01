@@ -34,13 +34,14 @@ export default class App extends React.Component {
       const idx = new Map();
       tmpNode.forEach(({id, i}) => idx.set(id, i));
 
-      const nodes = tmpNode.map(({id, info, prev, next}) => ({id, info, children: [], prev, next}));
+      const nodes = tmpNode.map(({id, info, prev, next}) => ({id, info, children: new Array(0), prev, next}));
+
       tmpNode.filter(({parent}) => parent !== 0)
         .forEach(({parent, i}) => nodes[i].parent = nodes[idx.get(parent)]);
       tmpNode.filter(({prev, parent}) => prev === 0 && parent !== 0)
         .forEach(({parent, i}) => nodes[idx.get(parent)].children.push(nodes[i]));
       tmpNode.filter(({parent}) => parent === 0).forEach(({i}) => nodes[i].parent = {id: 0});
-      
+
       nodes.forEach(({children}) => {
           if (children.length === 0) return;
           children[0].prev = {id: 0};
@@ -214,7 +215,6 @@ export default class App extends React.Component {
     this.erase(j, () => {
       this.erase(i, () => {
         this.insert(i - 1, oldJ, () => {
-          console.log("TES");
           this.insert(j - 1, oldI);
         })
       });
@@ -228,7 +228,7 @@ export default class App extends React.Component {
     return (
       <div className="App">
         <ul>
-          {this.state.roots.map(n => <li><Node ref={(node) => this.ref[n.id] = node} node={n} updateChild={this.updateChild} insertId={this.insertId} indentId={this.indentId} eraseId={this.eraseId} focusPrev={this.focusPrev} focusNext={this.focusNext} swap={this.swap} checkSwap={this.checkSwap}/></li>)}
+          {this.state.roots.map(n => <li><Node key={n.id} ref={(node) => this.ref[n.id] = node} node={n} updateChild={this.updateChild} insertId={this.insertId} indentId={this.indentId} eraseId={this.eraseId} focusPrev={this.focusPrev} focusNext={this.focusNext} swap={this.swap} checkSwap={this.checkSwap}/></li>)}
         </ul>
       </div>
     );
