@@ -331,7 +331,6 @@ export default class Node extends React.Component {
   render() {
     return (
       <div className="Node">
-        {/* <p contentEditable="true" onKeyDown={this.handleKey} onInput={this.handleChange} ref={this.pRef}>{this.state.node.info}</p> */}
         {
           this.state.node.id !== 0 ? 
             <div class="inputForm"> 
