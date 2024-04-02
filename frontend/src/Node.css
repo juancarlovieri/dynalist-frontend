@@ -17,6 +17,7 @@ input {
   position: relative;
   padding-left: 0em;
   flex: 1;
+  height: 2em;
 }
 
 input:focus {
