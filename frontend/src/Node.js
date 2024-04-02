@@ -332,14 +332,15 @@ export default class Node extends React.Component {
     return (
       <div className="Node">
         {
-          this.state.node.id !== 0 ? 
+          this.state.node.id > 0 ? 
             <div class="inputForm"> 
               <span ref={(s) => this.span = s} class={`bullet ${this.state.hide ? "hidden" : ""} ${this.state.selected ? "selected" : ""}`} onClick={this.toggleHide}> &#8226;</span> 
               <input id={this.state.node.id} ref={(i) => this.input = i}  type="text" value={this.state.node.info} onChange={this.handleChange} onKeyDown={this.handleKey}/>
             </div> 
           : null
         }
-        <div className="children">
+        <div class="children">
+          {this.state.node.id > 0 ? <div class="line"></div> : null}
           <ul>
           {this.state.hide ? null : 
             this.state.node.children.map(node => 

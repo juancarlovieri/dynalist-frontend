@@ -24,13 +24,26 @@ input:focus {
   outline: none;
 }
 
+
+.line {
+  background-color: #adadad7a;
+  height: 100%;
+  height: -webkit-fill-available;
+  height: -moz-fill-available;
+  height: -fill-available;
+  margin: 0.5em;
+  margin-left: 1.35em;
+  width: 0.5px;
+  position: absolute;
+}
+
 span.bullet {
   flex-shrink: 0;
   font-size: 2em;
   display: inline-flex;
   align-items: center;
   vertical-align: middle;
-  margin-top: -0.25em;
+  margin-top: -0.27em;
   -webkit-touch-callout: none; /* iOS Safari */
   -webkit-user-select: none; /* Safari */
   -khtml-user-select: none; /* Konqueror HTML */
@@ -54,8 +67,18 @@ ul {
 li {
   margin: 0 0;
   position: relative;
-  padding-left: 2em
+  padding-left: 2.3em;
+  margin-left: 0em;
 }
+
+/* li::before {
+  content: "";
+  background-color: gray;
+  height: 100%;
+  width: 0.5px;
+  position: absolute;
+  margin-right: 100px;
+} */
 
 span.bullet:hover {
   cursor: pointer;
