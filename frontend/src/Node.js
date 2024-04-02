@@ -323,6 +323,11 @@ export default class Node extends React.Component {
     this.setState({node: {...node, info: this.state.node.info, children: this.state.node.children}});
   }
 
+  shouldComponentUpdate(props) {
+    if (props.children !== this.state.node.children) return true;
+    return false;
+  }
+
   render() {
     return (
       <div className="Node">
@@ -339,7 +344,7 @@ export default class Node extends React.Component {
           <ul>
           {this.state.hide ? null : 
             this.state.node.children.map(node => 
-              <li onClick={this.toggleHide} id={node.id}><Node key={node.id} ref={(i) => this.ref[node.id] = i} node={node} fn={this.fn} /></li>)
+              <li key={node.id} onClick={this.toggleHide} id={node.id}><Node key={node.id} ref={(i) => this.ref[node.id] = i} node={node} fn={this.fn} /></li>)
           }
           </ul>
         </div>
