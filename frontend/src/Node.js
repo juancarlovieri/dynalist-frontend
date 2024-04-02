@@ -46,6 +46,8 @@ export default class Node extends React.Component {
     this.swap = this.swap.bind(this);
     this.checkSwap = this.checkSwap.bind(this);
     this.saveState = this.saveState.bind(this);
+    this.fn = (({insertId, updateChild, indentId, insertBack, unindentId, eraseId, focusPrev, focusNext, swap, checkSwap, saveState}) => 
+      ({insertId, updateChild, indentId, insertBack, unindentId, eraseId, focusPrev, focusNext, swap, checkSwap, saveState}))(this);
   }
 
   saveState() {
@@ -102,7 +104,7 @@ export default class Node extends React.Component {
     const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/create`, {info: "", parent: this.state.node.parent.id, prev: 0, next: 0});
     const newNode = {...res.data, children: [], parent: this.state.node.parent};
 
-    this.props.insertId(this.state.node.id, newNode);
+    this.props.fn.insertId(this.state.node.id, newNode);
   }
 
   async insertId(id, node) {
@@ -208,13 +210,13 @@ export default class Node extends React.Component {
     if (this.state.node.id === 0) return;
     await this.erase(i);
     node.parent = this.state.node.parent;
-    this.props.insertId(this.state.node.id, node);
+    this.props.fn.insertId(this.state.node.id, node);
   }
 
   async delete() {
     if (this.state.node.id === 0) return;
-    this.props.focusPrev(this.state.node.id);
-    this.props.eraseId(this.state.node.id, this.state.node);
+    this.props.fn.focusPrev(this.state.node.id);
+    this.props.fn.eraseId(this.state.node.id, this.state.node);
     await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/delete?id=${this.state.node.id}`);
   }
 
@@ -238,7 +240,7 @@ export default class Node extends React.Component {
     const tmp = this.state.node.children.map((n, i) => ({...n, i})).filter(n => n.id === id);
     if (tmp.length !== 1) return;
     if (tmp[0].i === this.state.node.children.length - 1) {
-      if (this.state.node.id !== 0) this.props.focusNext(this.state.node.id);
+      if (this.state.node.id !== 0) this.props.fn.focusNext(this.state.node.id);
       else return;
     } else {
       this.ref[this.state.node.children[tmp[0].i + 1].id].input.focus();
@@ -275,10 +277,10 @@ export default class Node extends React.Component {
       event.preventDefault();
       if (event.shiftKey) {
         if (this.state.node.parent.id === 0) return;
-        this.props.unindentId(this.state.node.id, this.saveState());
+        this.props.fn.unindentId(this.state.node.id, this.saveState());
         return;
       }
-      this.props.indentId(this.state.node.id, this.saveState());
+      this.props.fn.indentId(this.state.node.id, this.saveState());
     }
     if (event.key === "Enter") {
       event.preventDefault();
@@ -292,7 +294,7 @@ export default class Node extends React.Component {
     }
     if (event.key === "ArrowUp") {
       event.preventDefault();
-      this.props.focusPrev(this.state.node.id);
+      this.props.fn.focusPrev(this.state.node.id);
     }
     if (event.key === "ArrowDown") {
       event.preventDefault();
@@ -300,7 +302,7 @@ export default class Node extends React.Component {
         this.ref[this.state.node.children[0].id].input.focus();
         return;
       }
-      this.props.focusNext(this.state.node.id);
+      this.props.fn.focusNext(this.state.node.id);
 
     }
   }
@@ -312,7 +314,7 @@ export default class Node extends React.Component {
     event.stopPropagation();
 
     if (event.shiftKey) {
-      this.setState({selected: !this.state.selected}, () => this.props.checkSwap());
+      this.setState({selected: !this.state.selected}, () => this.props.fn.checkSwap());
     } else this.setState({hide: !this.state.hide});
   }
 
@@ -337,7 +339,7 @@ export default class Node extends React.Component {
           <ul>
           {this.state.hide ? null : 
             this.state.node.children.map(node => 
-              <li onClick={this.toggleHide} id={node.id}><Node key={node.id} ref={(i) => this.ref[node.id] = i} node={node} insertId={this.insertId} updateChild={this.updateChild} indentId={this.indentId} insertBack={this.insertBack} unindentId={this.unindentId} eraseId={this.eraseId} focusPrev={this.focusPrev} focusNext={this.focusNext} swap={this.swap} checkSwap={this.checkSwap} saveState={this.saveState}/></li>)
+              <li onClick={this.toggleHide} id={node.id}><Node key={node.id} ref={(i) => this.ref[node.id] = i} node={node} fn={this.fn} /></li>)
           }
           </ul>
         </div>
