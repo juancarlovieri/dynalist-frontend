@@ -45,6 +45,14 @@ export default class Node extends React.Component {
     this.toggleHide = this.toggleHide.bind(this);
     this.swap = this.swap.bind(this);
     this.checkSwap = this.checkSwap.bind(this);
+    this.saveState = this.saveState.bind(this);
+  }
+
+  saveState() {
+    return {
+      ...this.state.node, 
+      children: this.state.node.children.map(({id}) => this.ref[id].saveState())
+    }
   }
 
   async saveNode(node, text) {
@@ -248,8 +256,10 @@ export default class Node extends React.Component {
     if (i > j) {
       j = [i, i = j][0];
     }
-    const oldI = this.state.node.children[i];
-    const oldJ = this.state.node.children[j];
+    let oldI = this.state.node.children[i];
+    oldI = this.ref[oldI.id].saveState();
+    let oldJ = this.state.node.children[j];
+    oldJ = this.ref[oldJ.id].saveState();
     this.erase(j, () => {
       this.erase(i, () => {
         this.insert(i - 1, oldJ, () => {
@@ -265,10 +275,10 @@ export default class Node extends React.Component {
       event.preventDefault();
       if (event.shiftKey) {
         if (this.state.node.parent.id === 0) return;
-        this.props.unindentId(this.state.node.id, this.state.node);
+        this.props.unindentId(this.state.node.id, this.saveState());
         return;
       }
-      this.props.indentId(this.state.node.id, this.state.node);
+      this.props.indentId(this.state.node.id, this.saveState());
     }
     if (event.key === "Enter") {
       event.preventDefault();
@@ -327,7 +337,7 @@ export default class Node extends React.Component {
           <ul>
           {this.state.hide ? null : 
             this.state.node.children.map(node => 
-              <li onClick={this.toggleHide} id={node.id}><Node key={node.id} ref={(i) => this.ref[node.id] = i} node={node} insertId={this.insertId} updateChild={this.updateChild} indentId={this.indentId} insertBack={this.insertBack} unindentId={this.unindentId} eraseId={this.eraseId} focusPrev={this.focusPrev} focusNext={this.focusNext} swap={this.swap} checkSwap={this.checkSwap}/></li>)
+              <li onClick={this.toggleHide} id={node.id}><Node key={node.id} ref={(i) => this.ref[node.id] = i} node={node} insertId={this.insertId} updateChild={this.updateChild} indentId={this.indentId} insertBack={this.insertBack} unindentId={this.unindentId} eraseId={this.eraseId} focusPrev={this.focusPrev} focusNext={this.focusNext} swap={this.swap} checkSwap={this.checkSwap} saveState={this.saveState}/></li>)
           }
           </ul>
         </div>
