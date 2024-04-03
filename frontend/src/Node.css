@@ -18,8 +18,10 @@ input {
   flex: 1;
   height: 2em;
   min-width: 10em;
-  font-family: "Work Sans", sans-serif;
+  font-family: var(--font);
   font-size: 1.1em;
+  background-color: transparent;
+  color: var(--color-text);
 }
 
 input:focus {
@@ -28,7 +30,7 @@ input:focus {
 
 
 .line {
-  background-color: #adadad7a;
+  background-color: var(--color-line);
   top: 2em;
   bottom: 0;
   margin: 0.5em;

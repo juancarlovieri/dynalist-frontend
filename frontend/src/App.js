@@ -5,12 +5,27 @@ import React from 'react';
 
 export default class App extends React.Component {
   state = {
-    root: {id: -1, info: "This is your notes!", children: []}
+    root: {id: -1, info: "This is your notes!", children: []},
+    mode: false,
   }
 
   constructor(props) {
     super(props)
     this.ref = {};
+    this.darkSwitch = this.darkSwitch.bind(this);
+    this.setMode = this.setMode.bind(this);
+    if (typeof JSON.parse(localStorage.getItem("mode")) !== "boolean") {
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        this.setMode(true);
+        this.state.mode = true;
+      } else {
+        this.setMode(true);
+        this.state.mode = false;
+      }
+    } else {
+      this.state.mode = JSON.parse(localStorage.getItem("mode"));
+      this.setMode(this.state.mode);
+    }
   }
 
   componentDidMount() {
@@ -47,11 +62,35 @@ export default class App extends React.Component {
     })
   }
 
+  setMode(mode) {
+    if (mode === true) {
+      document.body.classList.add("dark");
+    } else {
+      document.body.classList.remove("dark");
+    }
+  }
 
+  darkSwitch(e) {
+    const mode = !this.state.mode;
+    this.setState({mode});
+    localStorage.setItem("mode", mode);
+    this.setMode(mode);
+  }
 
   render() {
+    console.log(this.state.mode);
     return (
       <div className="App">
+        <header>
+          <div class="switch-wrapper">
+              <span class="mode-info">Light Mode</span>
+              <label class="switch mode-info">
+                <input type="checkbox" checked={this.state.mode} onChange={this.darkSwitch}/>
+                <span class="slider round"></span>
+              </label>
+              <span class="mode-info">Dark Mode</span>
+          </div>
+        </header>
         <Node key={this.state.root.id} node={this.state.root} />
       </div>
     );
