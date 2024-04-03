@@ -143,7 +143,7 @@ export default class Node extends React.Component {
     if (i !== tmp.children.length - 2) await this.saveNode(tmp.children[i + 2], this.ref[tmp.children[i + 2].id].state.node.info);
 
     this.setState({node: tmp, lock: false}, () => {
-      this.ref[node.id].input.focus()
+      this.ref[node.id].input.focus({preventScroll: true})
       if (typeof(cb) === "function") cb();
     });
   }
@@ -224,7 +224,7 @@ export default class Node extends React.Component {
     const tmp = this.state.node.children.map((n, i) => ({...n, i})).filter(n => n.id === id);
     if (tmp.length !== 1) return;
     if (tmp[0].i === 0) {
-      if (this.state.node.id !== 0) this.input.focus();
+      if (this.state.node.id !== 0) this.input.focus({preventScroll: true});
       else return;
     } else {
       this.ref[this.state.node.children[tmp[0].i - 1].id].focusLast()
@@ -232,7 +232,7 @@ export default class Node extends React.Component {
   }
 
   focusLast() {
-    if (this.state.node.children.length === 0) this.input.focus();
+    if (this.state.node.children.length === 0) this.input.focus({preventScroll: true});
     else this.ref[this.state.node.children.slice(-1)[0].id].focusLast();
   }
  
@@ -243,7 +243,7 @@ export default class Node extends React.Component {
       if (this.state.node.id !== 0) this.props.fn.focusNext(this.state.node.id);
       else return;
     } else {
-      this.ref[this.state.node.children[tmp[0].i + 1].id].input.focus();
+      this.ref[this.state.node.children[tmp[0].i + 1].id].input.focus({preventScroll: true});
     }
   }
 
@@ -299,7 +299,7 @@ export default class Node extends React.Component {
     if (event.key === "ArrowDown") {
       event.preventDefault();
       if (this.state.node.children.length !== 0) {
-        this.ref[this.state.node.children[0].id].input.focus();
+        this.ref[this.state.node.children[0].id].input.focus({preventScroll: true});
         return;
       }
       this.props.fn.focusNext(this.state.node.id);

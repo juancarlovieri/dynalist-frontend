@@ -13,11 +13,13 @@ input {
   margin: 0;
   border:0;
   width: 100%;
-  font-size: 1em;
   position: relative;
-  padding-left: 0em;
+  padding: 0em;
   flex: 1;
   height: 2em;
+  min-width: 10em;
+  font-family: "Work Sans", sans-serif;
+  font-size: 1.1em;
 }
 
 input:focus {
@@ -68,15 +70,6 @@ li {
   padding-left: 2.3em;
   margin-left: 0em;
 }
-
-/* li::before {
-  content: "";
-  background-color: gray;
-  height: 100%;
-  width: 0.5px;
-  position: absolute;
-  margin-right: 100px;
-} */
 
 span.bullet:hover {
   cursor: pointer;
