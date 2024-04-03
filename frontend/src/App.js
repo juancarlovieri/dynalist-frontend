@@ -19,7 +19,7 @@ export default class App extends React.Component {
         this.setMode(true);
         this.state.mode = true;
       } else {
-        this.setMode(true);
+        this.setMode(false);
         this.state.mode = false;
       }
     } else {
